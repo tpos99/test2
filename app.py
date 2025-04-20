@@ -22,7 +22,7 @@ headers = {
 # Simbol dari Yahoo Finance
 symbols = {
     "Bitcoin (BTC-USD)": "BTC-USD",
-    "Gold (Emas - XAUUSD=X)": "XAUUSD=X",
+    "Gold (Emas - GC=F)": "GC=F",
     "SPY (S&P 500 ETF)": "SPY"
 }
 
