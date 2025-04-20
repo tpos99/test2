@@ -2,6 +2,7 @@ import streamlit as st
 import requests
 import pandas as pd
 import datetime
+import time
 
 # Judul Aplikasi
 st.title("Analisis Data BTC, Emas, dan SPY dari Yahoo Finance API (RapidAPI)")
@@ -42,10 +43,24 @@ def get_data(symbol, start, end):
         "start": int(datetime.datetime(start.year, start.month, start.day).timestamp()),
         "end": int(datetime.datetime(end.year, end.month, end.day).timestamp())
     }
-    
-    response = requests.get(url, headers=headers, params=params)
-    
-    if response.status_code == 200:
+
+    response = None
+    attempt = 0
+    while attempt < 3:  # Mencoba maksimal 3 kali
+        response = requests.get(url, headers=headers, params=params)
+        
+        if response.status_code == 200:
+            break
+        elif response.status_code == 429:
+            # Jika menerima status 429 (terlalu banyak permintaan), tunggu 60 detik
+            st.warning("Terlalu banyak permintaan, menunggu selama 60 detik...")
+            time.sleep(60)
+            attempt += 1
+        else:
+            st.error(f"Error mengambil data untuk {symbol}: {response.status_code}")
+            return pd.DataFrame()  # Kembalikan DataFrame kosong jika ada error selain 429
+
+    if response and response.status_code == 200:
         data = response.json()
         
         if 'prices' in data:
@@ -59,8 +74,7 @@ def get_data(symbol, start, end):
             st.warning(f"Tidak ada data yang tersedia untuk {symbol}.")
             return pd.DataFrame()  # Jika tidak ada data
     else:
-        st.error(f"Error mengambil data untuk {symbol}: {response.status_code}")
-        return pd.DataFrame()  # Kembalikan DataFrame kosong jika error
+        return pd.DataFrame()  # Kembalikan DataFrame kosong jika tidak berhasil mengambil data
 
 # Gabungkan data
 if selected_assets:
